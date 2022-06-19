@@ -11,11 +11,57 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>qrapto1 - crappy crapto1 demo ui</string>
+   <string>qrapto1 - crapto1 GUI</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">* {
+	color: #ffffff;
+}
+
+QWidget {
+  background-color: #333333;
+}
+
+QLabel {
+  font-weight: bold;
+}
+
+QPushButton {
+  color: #ffffff;
+  font-weight: bold;
+  border: none;
+  padding: 5px;
+  border: 1px solid #FFFFFF;
+  height: 20px;
+  border-radius: 3px;
+}
+QPushButton:hover {
+  background-color: #ffffff;
+  color: #333333;
+}
+
+QLineEdit {
+	color: #fff;
+	border: 1px solid white;
+	height: 25px;
+	border-radius: 3px;
+}
+
+QTabWidget {
+	color: #fff;
+}
+
+QFrame#frame_11, QFrame#frame_12, QFrame#frame_2, QFrame#frame_6, QFrame#frame_3, QFrame#frame_4, QFrame#frame_5, QFrame#frame_13, QFrame#frame_14, QFrame#frame_15, QFrame#frame, QFrame#frame_6, QFrame#frame_10, QFrame#frame_8, QFrame#frame_9, QFrame#frame_18, QFrame#frame_19, QFrame#frame_20, QFrame#frame_21, QFrame#frame_16, QFrame#frame_17, QFrame#frame_7 {
+	border: 1px solid white;
+	border-radius: 3px;
+}</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTabWidget" name="tabWidget">
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
      <property name="tabShape">
       <enum>QTabWidget::Rounded</enum>
      </property>
@@ -384,6 +430,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="btnRevSecret">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
          <property name="text">
           <string>&amp;Recover Shared Secret</string>
          </property>
@@ -1003,20 +1052,138 @@
      </widget>
      <widget class="QWidget" name="tab_7">
       <attribute name="title">
-       <string>Tag Only</string>
+       <string>Nonce2Key</string>
       </attribute>
-      <widget class="QLabel" name="label_40">
+      <widget class="QFrame" name="frame_20">
        <property name="geometry">
         <rect>
-         <x>80</x>
-         <y>50</y>
-         <width>301</width>
-         <height>18</height>
+         <x>9</x>
+         <y>9</y>
+         <width>470</width>
+         <height>155</height>
+        </rect>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <layout class="QFormLayout" name="formLayout_16">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_40">
+          <property name="text">
+           <string>UID</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="strEscUID_2">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="strNonce1_2">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="strNonce2_2">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLineEdit" name="strNonce3_2">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_41">
+          <property name="text">
+           <string>nt</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_42">
+          <property name="text">
+           <string>par</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_43">
+          <property name="text">
+           <string>ks</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QPushButton" name="btnEscalate_2">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>170</y>
+         <width>470</width>
+         <height>32</height>
         </rect>
        </property>
        <property name="text">
-        <string>Not Implemented</string>
+        <string>&amp;Recover Shared Secret</string>
        </property>
+      </widget>
+      <widget class="QFrame" name="frame_21">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>210</y>
+         <width>470</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <layout class="QFormLayout" name="formLayout_17">
+        <property name="fieldGrowthPolicy">
+         <enum>QFormLayout::ExpandingFieldsGrow</enum>
+        </property>
+        <property name="formAlignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_44">
+          <property name="text">
+           <string>Key</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="strSecret_3">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
      <widget class="QWidget" name="tab_3">

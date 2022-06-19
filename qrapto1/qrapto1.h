@@ -65,6 +65,7 @@ public slots:
 	void doTryAll();
 	void doTrySelected();
 	//TAB 5
+    void nonce2key();
 	void doEscalate();
 	void doEscalateResult(uint64_t);
 	//TAB 6

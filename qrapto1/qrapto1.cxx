@@ -60,6 +60,9 @@ Crapto1Gui::Crapto1Gui()
 	//TAB 5
 	connect(btnEscalate,       SIGNAL(clicked()), this, SLOT(doEscalate()));
 	eworkers = 0;
+
+    connect(btnEscalate_2,     SIGNAL(clicked()), this, SLOT(nonce2key()));
+
 	//TAB 6
 	connect(btnBenchmark, SIGNAL(clicked()), this, SLOT(doBench()));
 }
@@ -69,6 +72,12 @@ uint32_t line2int(QLineEdit* le)
 {
     return strtoul(le->text().replace('!', "").replace(' ', "").toUtf8(), 0, 16);
 }
+
+uint64_t line2int2(QLineEdit* le)
+{
+    return strtoul(le->text().replace('!', "").replace(' ', "").toUtf8(), 0, 16);
+}
+
 uint32_t extractParity(QString val, int num)
 {
 	uint32_t field = 0, parities = 0, extra = 0;
@@ -312,6 +321,39 @@ void Crapto1Gui::doTrySelected()
 /**
  TAB 5: Nested Authentication, Valid Tag Only
 */
+
+void Crapto1Gui::nonce2key() {
+    struct Crypto1State *state;
+    uint32_t pos, uid, nt, nr, rr;
+    uint8_t ks3x[8], par[8][8];
+        uint64_t key_recovered;
+        uint64_t par_info;
+        uint64_t ks_info;
+        nr = rr = 0;
+    uid = line2int(strEscUID_2);
+    nt = line2int(strNonce1_2);
+    par_info = line2int2(strNonce2_2);
+    ks_info = line2int2(strNonce3_2);
+    nr &= 0xffffff1f;
+
+    for (pos = 0; pos < 8; pos++) {
+           ks3x[7 - pos] = (ks_info >> (pos * 8)) & 0x0f;
+           uint8_t bt = (par_info >> (pos * 8)) & 0xff;
+
+           for (uint8_t i = 0; i < 8; i++) {
+               par[7 - pos][i] = (bt >> i) & 0x01;
+           }
+     }
+    state = lfsr_common_prefix(nr, rr, ks3x, par);
+        lfsr_rollback_word(state, uid ^ nt, 0);
+        crypto1_get_lfsr(state, &key_recovered);
+
+    //QString::number(nonce,16)
+    strSecret_3->setText(QString::number(key_recovered,16));
+
+    crypto1_destroy(state);
+}
+
 bool EscalateWorker::doEscAttack(uint32_t uid, uint32_t n1, uint32_t n2, uint32_t n3, uint32_t nonce)
 {
 	Crypto1State  *list = lfsr_recovery32(n1 ^ nonce, uid ^ nonce), *item;
