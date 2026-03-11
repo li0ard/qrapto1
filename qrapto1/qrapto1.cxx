@@ -24,11 +24,10 @@
 #include <QTime>
 #include "qrapto1.h"
 #include "../crapto1.h"
-/*#error Undefined Error*/
 Crapto1Gui::Crapto1Gui()
 {
 	setupUi(this);
-	//TAB 1
+    // TAB 1
 	signalMapper = new QSignalMapper(this);
 	connect(btnKSBack,   SIGNAL(clicked()), signalMapper, SLOT(map()));
 	connect(btnKSNext,   SIGNAL(clicked()), signalMapper, SLOT(map()));
@@ -39,15 +38,20 @@ Crapto1Gui::Crapto1Gui()
 	connect(signalMapper, SIGNAL(mapped(int)), this, SLOT(doKS(int)));
 	connect(strRevState,  SIGNAL(textChanged(const QString &)), this, SLOT(doDecrypt(const QString &)));
 	connect(strEncrypted, SIGNAL(textChanged(const QString &)), this, SLOT(doDecrypt(const QString &)));
-	//TAB 2
+    // TAB 2
 	connect(comboKs3,          SIGNAL(currentIndexChanged(const QString &)), this, SLOT(doChallengeChange(const QString &)));
 	connect(strTagChallenge,   SIGNAL(textChanged(const QString &)), this, SLOT(doChallengeChange(const QString &)));
 	connect(strReaderResponse, SIGNAL(textChanged(const QString &)), this, SLOT(doChallengeChange(const QString &)));
 	connect(strTagResponse,    SIGNAL(textChanged(const QString &)), this, SLOT(doChallengeChange(const QString &)));
 	connect(btnRevSecret,      SIGNAL(clicked()), this, SLOT(doRevSecret()));
-	//TAB 3
-	connect(btnRevSecret_2,    SIGNAL(clicked()), this, SLOT(doRevPartial()));
-	//TAB 4
+    // TAB 3
+    connect(btnRevSecret_2,    SIGNAL(clicked()), this, SLOT(doRevPartial()));
+    // TAB 4
+    connect(strNA_TagChallenge,   SIGNAL(textChanged(const QString &)), this, SLOT(doChallengeKeystream(const QString &)));
+    connect(str_NA_EncTagChallenge,   SIGNAL(textChanged(const QString &)), this, SLOT(doChallengeKeystream(const QString &)));
+    connect(str_NA_ReaderResponse,   SIGNAL(textChanged(const QString &)), this, SLOT(doChallengeKeystream(const QString &)));
+    connect(btnRevSecret_3, SIGNAL(clicked()), this, SLOT(doRevNested()));
+    // TAB 5
 	connect(strNonce,          SIGNAL(textChanged(const QString &)), this, SLOT(verifyNonce(const QString &)));
 	connect(strParNonce,       SIGNAL(textChanged(const QString &)), this, SLOT(doNonce(const QString &)));
 	connect(strParRCRR,        SIGNAL(textChanged(const QString &)), this, SLOT(doNonce(const QString &)));
@@ -57,13 +61,12 @@ Crapto1Gui::Crapto1Gui()
 	connect(btnRevKS,          SIGNAL(clicked()), this, SLOT(doRev()));
 	connect(btnTryAll,         SIGNAL(clicked()), this, SLOT(doTryAll()));
 	connect(btnTrySelected,    SIGNAL(clicked()), this, SLOT(doTrySelected()));
-	//TAB 5
+    // TAB 6
 	connect(btnEscalate,       SIGNAL(clicked()), this, SLOT(doEscalate()));
 	eworkers = 0;
-
-    connect(btnEscalate_2,     SIGNAL(clicked()), this, SLOT(nonce2key()));
-
-	//TAB 6
+    // TAB 7
+    connect(btnNonce2Key,     SIGNAL(clicked()), this, SLOT(nonce2key()));
+    //TAB 8
 	connect(btnBenchmark, SIGNAL(clicked()), this, SLOT(doBench()));
 }
 Crapto1Gui::~Crapto1Gui(){
@@ -226,7 +229,42 @@ void Crapto1Gui::doRevPartial()
 }
 
 /**
- TAB 4: nested authentication Valid Reader
+ TAB 4: Nested Authentication
+*/
+void Crapto1Gui::doChallengeKeystream(const QString &)
+{
+    uint32_t ar = prng_successor(line2int(strNA_TagChallenge), 64);
+    uint32_t ks0 = line2int(str_NA_EncTagChallenge) ^ line2int(strNA_TagChallenge);
+    uint32_t ks2 = line2int(str_NA_ReaderResponse) ^ ar;
+
+    str_NA_ks0->setText(QString::number(ks0, 16));
+    str_NA_ks2->setText(QString::number(ks2, 16));
+}
+void Crapto1Gui::doRevNested()
+{
+    uint32_t uid = line2int(strNA_UID);
+    uint32_t chal = line2int(strNA_TagChallenge);
+    uint32_t rchal = line2int(str_NA_ReaderChallenge);
+    uint64_t key;
+    struct Crypto1State *s = lfsr_recovery32(line2int(str_NA_ks0), uid ^ chal), *t;
+
+    for(t = s; t->odd | t->even; ++t) {
+        crypto1_word(t, rchal, 1);
+        if (line2int(str_NA_ks2) == crypto1_word(t, 0, 0)) {
+            lfsr_rollback_word(t,0,0);
+            lfsr_rollback_word(t,rchal,1);
+            lfsr_rollback_word(t,uid ^ chal,0);
+            crypto1_get_lfsr(t, &key);
+            str_NA_Secret->setText(QString::number(key, 16));
+            break;
+        }
+    }
+
+    free(s);
+}
+
+/**
+ TAB 5: nested authentication Valid Reader
 */
 void Crapto1Gui::verifyNonce(const QString &)
 {
@@ -319,41 +357,8 @@ void Crapto1Gui::doTrySelected()
 }
 
 /**
- TAB 5: Nested Authentication, Valid Tag Only
+ TAB 6: Nested Authentication, Valid Tag Only
 */
-
-void Crapto1Gui::nonce2key() {
-    struct Crypto1State *state;
-    uint32_t pos, uid, nt, nr, rr;
-    uint8_t ks3x[8], par[8][8];
-        uint64_t key_recovered;
-        uint64_t par_info;
-        uint64_t ks_info;
-        nr = rr = 0;
-    uid = line2int(strEscUID_2);
-    nt = line2int(strNonce1_2);
-    par_info = line2int2(strNonce2_2);
-    ks_info = line2int2(strNonce3_2);
-    nr &= 0xffffff1f;
-
-    for (pos = 0; pos < 8; pos++) {
-           ks3x[7 - pos] = (ks_info >> (pos * 8)) & 0x0f;
-           uint8_t bt = (par_info >> (pos * 8)) & 0xff;
-
-           for (uint8_t i = 0; i < 8; i++) {
-               par[7 - pos][i] = (bt >> i) & 0x01;
-           }
-     }
-    state = lfsr_common_prefix(nr, rr, ks3x, par);
-        lfsr_rollback_word(state, uid ^ nt, 0);
-        crypto1_get_lfsr(state, &key_recovered);
-
-    //QString::number(nonce,16)
-    strSecret_3->setText(QString::number(key_recovered,16));
-
-    crypto1_destroy(state);
-}
-
 bool EscalateWorker::doEscAttack(uint32_t uid, uint32_t n1, uint32_t n2, uint32_t n3, uint32_t nonce)
 {
 	Crypto1State  *list = lfsr_recovery32(n1 ^ nonce, uid ^ nonce), *item;
@@ -449,7 +454,42 @@ void Crapto1Gui::doEscalateResult(uint64_t key)
 }
 
 /**
- TAB 6: Benchmark
+ TAB 7: Nonce2Key
+*/
+void Crapto1Gui::nonce2key() {
+    struct Crypto1State *state;
+    uint32_t pos, uid, nt, nr, rr;
+    uint8_t ks3x[8], par[8][8];
+    uint64_t key_recovered;
+    uint64_t par_info;
+    uint64_t ks_info;
+    nr = rr = 0;
+    uid = line2int(strEscUID_2);
+    nt = line2int(strNonce1_2);
+    par_info = line2int2(strNonce2_2);
+    ks_info = line2int2(strNonce3_2);
+    nr &= 0xffffff1f;
+
+    for (pos = 0; pos < 8; pos++) {
+        ks3x[7 - pos] = (ks_info >> (pos * 8)) & 0x0f;
+        uint8_t bt = (par_info >> (pos * 8)) & 0xff;
+
+        for (uint8_t i = 0; i < 8; i++) {
+            par[7 - pos][i] = (bt >> i) & 0x01;
+        }
+    }
+    state = lfsr_common_prefix(nr, rr, ks3x, par);
+    lfsr_rollback_word(state, uid ^ nt, 0);
+    crypto1_get_lfsr(state, &key_recovered);
+
+    //QString::number(nonce,16)
+    strSecret_3->setText(QString::number(key_recovered,16));
+
+    crypto1_destroy(state);
+}
+
+/**
+ TAB 8: Benchmark
 */
 void Crapto1Gui::doBench()
 {

@@ -16,7 +16,7 @@
     MA  02110-1301, US$
 
     Copyright (C) 2008-2009 bla <blapost@gmail.com>
-    Copyright (C) 2022 li0ard
+    Copyright (C) 2026 li0ard
 */
 #include <QtGui>
 #include <QThread>
@@ -48,27 +48,31 @@ public:
 	Crapto1Gui();
 	virtual ~Crapto1Gui();
 public slots:
-	//TAB 1
+    // TAB 1
 	void doRev();
 	void doKS(int);
 	void doDecrypt(const QString &);
-	//TAB 2
+    // TAB 2
 	void doChallengeChange(const QString &);
 	void doRevSecret();
-	//TAB 3
+    // TAB 3
 	void doRevPartial();
-	//TAB 4
+    // TAB 4
+    void doChallengeKeystream(const QString &);
+    void doRevNested();
+    // TAB 5
 	void verifyNonce(const QString &);
 	void doNonce(const QString &);
 	void doParities(const QString &);
 	bool doTryOne(uint32_t);
 	void doTryAll();
 	void doTrySelected();
-	//TAB 5
-    void nonce2key();
+    // TAB 6
 	void doEscalate();
 	void doEscalateResult(uint64_t);
-	//TAB 6
+    // TAB 7
+    void nonce2key();
+    // TAB 8
 	void doBench();
 private:
 	EscalateWorker *eworkers;
